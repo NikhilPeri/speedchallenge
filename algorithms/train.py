@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import cv2
 from collections import deque
@@ -28,6 +29,7 @@ while(video.isOpened()):
 
     if len(training_frames) == BATCH_SIZE:
         history = cnn_model.fit(np.array(training_frames), np.array(training_labels), batch_size=BATCH_SIZE, epochs=EPOCHS)
+        cnn_model.save_weights('model/weights-{}.hd5'.format(time.strftime('%X')))
         import pdb; pdb.set_trace()
         training_frames=[]
         training_labels=[]
