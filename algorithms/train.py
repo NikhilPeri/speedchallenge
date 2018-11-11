@@ -29,9 +29,12 @@ while(video.isOpened()):
     training_frames.append(np.stack(frame_buffer, axis=2))
 
     if len(training_frames) == BATCH_SIZE:
-        history = cnn_model.fit(np.array(training_frames), np.array(training_labels), batch_size=BATCH_SIZE, epochs=EPOCHS)
+        frames = np.array(training_frames)
+        labels = np.array(training_labels)
+        cnn_model.evaluate(frames, labels)
+        history = cnn_model.fit(frames, labels, batch_size=BATCH_SIZE, epochs=EPOCHS))
         cnn_model.save_weights('model/weights.hd5')
-        import pdb; pdb.set_trace()
+
         training_frames=[]
         training_labels=[]
 
