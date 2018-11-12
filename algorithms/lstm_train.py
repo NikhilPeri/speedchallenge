@@ -21,6 +21,14 @@ try:
     model.load_weights('model/weights.hd5')
 except:
     print "could not load previous weights"
+
+save_callback = keras.callbacks.ModelCheckpoint(
+    'model/lstm/weights.{epoch:02d}-{val_loss:.2f}.hdf5',
+    monitor='val_loss', verbose=0,
+    save_best_only=True, save_weights_only=False,
+    mode='auto', period=1
+)
+
 while(video.isOpened()):
     label, frame = labeled_frame()
     training_labels.append([label])
@@ -30,7 +38,8 @@ while(video.isOpened()):
     if len(training_frames) == BATCH_SIZE:
         training_frames = np.array(training_frames).reshape(BATCH_SIZE, buffer_length, 480, 640, 1)
         training_labels = np.array(training_labels)
-        model.fit(training_frames, training_labels, batch_size=BATCH_SIZE, epochs=EPOCHS)
+
+        model.fit(training_frames, training_labels, batch_size=BATCH_SIZE, epochs=EPOCHS, callbacks=[save_callback])
 
         training_frames=[]
         training_labels=[]
