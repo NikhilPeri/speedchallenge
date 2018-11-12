@@ -17,7 +17,12 @@ model.add(TimeDistributed(Conv2D(16, (5, 5), activation='relu')))
 model.add(TimeDistributed(MaxPooling2D(pool_size=(2, 2))))
 model.add(TimeDistributed(Dropout(0.25)))
 
-model.add(ConvLSTM2D(32, (5,5), data_format='channels_last', activation='tanh'))
+model.add(TimeDistributed(Conv2D(16, (5, 5), padding='same', activation='relu'), input_shape=(FRAMES_SIZE, 480, 640, 1)))
+model.add(TimeDistributed(Conv2D(16, (5, 5), activation='relu')))
+model.add(TimeDistributed(MaxPooling2D(pool_size=(2, 2))))
+model.add(TimeDistributed(Dropout(0.25)))
+
+model.add(ConvLSTM2D(32, (5,5), data_format='channels_last', activation='relu'))
 model.add(Conv2D(16, (5, 5), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))

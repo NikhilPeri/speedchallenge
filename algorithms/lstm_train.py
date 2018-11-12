@@ -27,11 +27,11 @@ while(video.isOpened()):
     frame_buffer.append(frame)
     training_frames.append(np.stack(frame_buffer))
 
-    if len(training_frames) == 2:
-        frames = np.array(training_frames).reshape(2, buffer_length, 480, 640, 1)
-        labels = np.array(training_labels)
-        model.fit(frames, labels, batch_size=BATCH_SIZE, epochs=EPOCHS)
-        model.save_weights('model/weights.hd5')
+    if len(training_frames) == BATCH_SIZE:
+        training_frames = np.array(training_frames).reshape(BATCH_SIZE, buffer_length, 480, 640, 1)
+        training_labels = np.array(training_labels)
+        model.fit(training_frames, training_labels, batch_size=BATCH_SIZE, epochs=EPOCHS)
+
         training_frames=[]
         training_labels=[]
 video.release()
