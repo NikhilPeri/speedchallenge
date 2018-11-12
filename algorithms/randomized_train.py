@@ -27,8 +27,8 @@ while(video.isOpened()):
     frame_buffer.append(frame)
     training_frames.append(np.stack(frame_buffer, axis=2))
 
-    if len(training_frames) == 500:
-        for i in range(20):
+    if len(training_frames) == 200:
+        for i in range(3):
             idx=np.random.choice(np.arange(len(training_frames)), BATCH_SIZE, replace=False)
             frames = np.array(training_frames)[idx]
             labels = np.array(training_labels)[idx]
