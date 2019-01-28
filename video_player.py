@@ -1,25 +1,26 @@
+import cv2 as cv
 import numpy as np
-import cv2
-
-from collections import deque
-
-video = cv2.VideoCapture('data/train.mp4')
-speed = deque(np.loadtxt('data/train.txt', delimiter='\n'))
-
-def labeled_frame():
-    _, frame = video.read()
-    return (speed.popleft(), cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
-
-cv2.namedWindow('Current Frame')
-
-while(video.isOpened()):
-    label, frame = labeled_frame()
-    cv2.putText(
-        frame,
-        'Speed:{}'.format(label),
-        (0, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv2.LINE_AA)
-    cv2.imshow('Current Frame', frame)
-    cv2.waitKey(1)
-
-video.release()
-cv2.destroyAllWindows()
+cap = cv.VideoCapture("data/comma_ai/train.mp4")
+ret, frame1 = cap.read()
+prvs = cv.cvtColor(frame1,cv.COLOR_BGR2GRAY)
+import pdb; pdb.set_trace()
+hsv = np.zeros_like(frame1)
+hsv[...,1] = 255
+while(1):
+    ret, frame2 = cap.read()
+    next = cv.cvtColor(frame2,cv.COLOR_BGR2GRAY)
+    flow = cv.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 20, 3, 5, 1.1, cv.OPTFLOW_FARNEBACK_GAUSSIAN)
+    mag, ang = cv.cartToPolar(flow[...,0], flow[...,1])
+    hsv[...,0] = ang*180/np.pi/2
+    hsv[...,2] = cv.normalize(mag,None,0,255,cv.NORM_MINMAX)
+    bgr = cv.cvtColor(hsv,cv.COLOR_HSV2BGR)
+    cv.imshow('frame2',bgr)
+    k = cv.waitKey(30) & 0xff
+    if k == 27:
+        break
+    elif k == ord('s'):
+        cv.imwrite('opticalfb.png',frame2)
+        cv.imwrite('opticalhsv.png',bgr)
+    prvs = next
+cap.release()
+cv.destroyAllWindows()
