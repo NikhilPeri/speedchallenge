@@ -64,10 +64,7 @@ def class_is_stationary(color):
     return stationary_lookup[color]
 
 def reclassify_label(label):
-    label = cv2.resize(label, (0, 0), fx=0.25, fy=0.25, interpolation=cv2.INTER_NEAREST)
-    label = np.apply_along_axis(class_is_stationary, 2, label)
-    label = cv2.resize(label, (0, 0), fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
-    return label
+    return np.apply_along_axis(class_is_stationary, 2, label)
 
 def transform_images(input, output):
     images = os.listdir(input)
@@ -87,13 +84,13 @@ def transform_labels(classes, input, output):
         label_data = cv2.imread(os.path.join(input, label))
         label_data = resize_label(label_data)
         label_data = reclassify_label(label_data)
-        np.save(os.path.join(output, label.replace('_color.png', '.npy')), label_data)
+        cv2.imwrite(os.path.join(output, label), label_data)
         bar.next()
     bar.finish()
 
 if __name__ == '__main__':
-    transform_images('data/bdd100k/segmentation/images/train', 'data/bdd100k/stationary/images/train')
-    transform_images('data/bdd100k/segmentation/images/val', 'data/bdd100k/stationary/images/val')
+    transform_images('data/bdd100k/segmentation/images/train', 'data/bdd100k/segmentation/processed_images/train')
+    transform_images('data/bdd100k/segmentation/images/val', 'data/bdd100k/segmentation/processed_images/val')
 
-    #transform_labels(classes, 'data/bdd100k/segmentation/color_labels/train', 'data/bdd100k/stationary/labels/train')
-    #transform_labels(classes, 'data/bdd100k/segmentation/color_labels/val', 'data/bdd100k/stationary/labels/val')
+    transform_labels(classes, 'data/bdd100k/segmentation/color_labels/train', 'data/bdd100k/segmentation/processed_labels/train')
+    transform_labels(classes, 'data/bdd100k/segmentation/color_labels/val', 'data/bdd100k/segmentation/processed_labels/val')
