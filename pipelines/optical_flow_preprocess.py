@@ -10,11 +10,6 @@ def compute_optical_flow(input, output, chunksize=500):
     bar = Bar('Processed Frame', max=video.get(cv2.CAP_PROP_FRAME_COUNT))
     chunks = []
     chunk_data = []
-    def save_chunk():
-        with open(os.path.join(output, '{}.npy'.format(len(chunks))), 'w+') as f:
-            np.save(f, np.array(chunk_data))
-            chunks.append(len(chunk_data))
-            chunk_data = []
 
     prev_frame = cv2.cvtColor(video.read()[1], cv2.COLOR_RGB2GRAY)
     bar.next()
@@ -27,9 +22,16 @@ def compute_optical_flow(input, output, chunksize=500):
         ))
 
         if len(chunk_data) == chunksize:
-            save_chunk()
+            with open(os.path.join(output, '{}.npy'.format(len(chunks))), 'w+') as f:
+                np.save(f, np.array(chunk_data))
+                chunks.append(len(chunk_data))
+                chunk_data = []
+
     # Save Partial Chunk
-    save_chunk()
+    with open(os.path.join(output, '{}.npy'.format(len(chunks))), 'w+') as f:
+        np.save(f, np.array(chunk_data))
+        chunks.append(len(chunk_data))
+        chunk_data = []
 
     with open(os.path.join(output, 'info'), 'w+') as f:
         pickle.dump({

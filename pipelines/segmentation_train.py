@@ -1,37 +1,50 @@
+import time
 import os
 import cv2
 import keras
 import numpy as np
-from progress.bar import Bar
 
-BATCH_SIZE=500
-EPOCHS=10
+MAX_CONCURRENCY=8
+BATCH_SIZE=10
+EPOCHS=100
 
-from algorithms.upsampling_cnn import model
+from algorithms.unet import model
 
-def load_images_and_labels(image_path, label_path):
-    image_files = os.listdir(image_path)
-    bar = Bar('Loading Images and Labels', max=len(image_files))
-    images = []
-    labels = []
-    for image in image_files:
-        images.append(cv2.imread(os.path.join(image_path, image)))
-        labels.append(np.load(os.path.join(label_path, image.replace('.jpg', '_train.npy'))))
-        bar.next()
+class DataGenerator(keras.utils.Sequence):
+    def __init__(self, image_path, label_path, batch_size=BATCH_SIZE, shuffle=True):
+        self.batch_size = batch_size
+        self.indexes = np.array([i.replace('.jpg', '') for i in os.listdir(image_path)])
+        self.label_path = label_path
+        self.image_path = image_path
+        self.shuffle = shuffle
+        self.on_epoch_end()
 
-    bar.finish()
-    return images, labels
+    def __len__(self):
+        return int(np.floor(len(self.indexes) / self.batch_size))
+
+    # return a BATCH
+    def __getitem__(self, index):
+        indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
+        images = []
+        labels = []
+        for image in indexes:
+            images.append(cv2.imread(os.path.join(self.image_path, image) + '.jpg'))
+            labels.append(np.load(os.path.join(self.label_path, image) + '.npy'))
+
+        return images, labels
+
+    def on_epoch_end(self):
+        if self.shuffle == True:
+            np.random.shuffle(self.indexes)
 
 if __name__ == '__main__':
-    training_images, training_labels = load_images_and_labels('data/bdd100k/stationary/images/train', 'data/bdd100k/stationary/labels/train')
-    validation_images, validation_labels = load_images_and_labels('data/bdd100k/stationary/images/val', 'data/bdd100k/stationary/labels/val')
-    import pdb; pdb.set_trace()
+
     timestamp = time.strftime('%c')
-    os.mkdir('model/{}'.format(timestamp))
+    os.mkdir('models/{}'.format(timestamp))
     os.mkdir('logs/{}'.format(timestamp))
     save_callback = keras.callbacks.ModelCheckpoint(
-        'model/' + timestamp + '/weights-{val_mean_squared_error:.2f}.hdf5',
-        monitor='val_mean_squared_error', verbose=0,
+        'models/' + timestamp + '/weights-{val_binary_crossentropy:.3f}.hdf5',
+        monitor='val_binary_crossentropy', verbose=0,
         save_best_only=True, save_weights_only=False,
         mode='auto', period=1
     )
@@ -40,9 +53,10 @@ if __name__ == '__main__':
         batch_size=BATCH_SIZE,
         update_freq='epoch'
     )
-    model.fit(
-        training_images, training_labels,
-        validation_data=(validation_images, validation_labels),
-        batch_size=BATCH_SIZE, epochs=EPOCHS,
+    model.fit_generator(
+        generator=DataGenerator('data/bdd100k/segmentation/processed_images/train', 'data/bdd100k/segmentation/processed_labels/train'),
+        validation_data=DataGenerator('data/bdd100k/segmentation/processed_images/val', 'data/bdd100k/segmentation/processed_labels/val'),
+        use_multiprocessing=True,
+        workers=MAX_CONCURRENCY,
         callbacks=[save_callback, tensorboard_callback]
     )

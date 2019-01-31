@@ -3,7 +3,10 @@ import os
 import pandas as pd
 import numpy as np
 from progress.bar import Bar
+from multiprocessing import Pool
 
+MAX_CONCURRENCY = 8
+bar = Bar('Processing images')
 classes = pd.DataFrame([
     ['unlabled'          ,  'void'        , (  0,  0,  0),  0],
     ['dynamic'           ,  'void'        , (  0, 74,111),  1],
@@ -50,47 +53,52 @@ classes = pd.DataFrame([
 )
 stationary_lookup = pd.Series(classes['isStationary'].values, classes['color']).to_dict()
 
-def resize_image(image):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    image = cv2.resize(image, (0, 0), fx=0.666, fy=0.666)
-    return image[:, 106:746] # crop 480x852 to 480x640
-
-def resize_label(label):
-    label = cv2.resize(label, (0, 0), fx=0.666, fy=0.666, interpolation=cv2.INTER_NEAREST)
-    return label[:, 106:746] # crop 480x852 to 480x640
-
 def class_is_stationary(color):
     color = tuple(color)
     return stationary_lookup[color]
 
-def reclassify_label(label):
-    return np.apply_along_axis(class_is_stationary, 2, label)
+def processed_label(args):
+    label_data = cv2.imread(args[0])
+    label_data = cv2.resize(label_data, (0, 0), fx=0.666, fy=0.666, interpolation=cv2.INTER_NEAREST)
+    label_data[:, 106:746] # crop 480x852 to 480x640
+    label_data = np.apply_along_axis(class_is_stationary, 2, label_datatobia)
+
+    np.save(args[1], label_data)
+    bar.next()
+
+def transform_labels(input, output):
+    labels = os.listdir(input)
+    bar.max = len(labels)
+
+    worker = Pool(MAX_CONCURRENCY)
+    worker.map(
+        processed_label,
+        [(os.path.join(input, label), os.path.join(output, label).replace('_train_color.png', '.npy')) for label in labels]
+    )
+    bar.finish()
+
+def process_image(args):
+    image_data = cv2.imread(args[0])
+    image_data = cv2.resize(image_data, (0, 0), fx=0.666, fy=0.666)
+    image_data = image_data[:, 106:746] # crop 480x852 to 480x640
+
+    cv2.imwrite(args[1], image_data)
+    bar.next()
 
 def transform_images(input, output):
     images = os.listdir(input)
-    bar = Bar('Processing Labels', max=len(labels))
-    for image in images:
-        image_data = cv2.imread(os.path.join(input, image))
-        image_data = resize_image(image_data)
-        cv2.imwrite(os.path.join(output, image), image_data)
-        print "Processed {}".format(image)
-        bar.next()
-    bar.finish()
+    bar.max = len(images)
 
-def transform_labels(classes, input, output):
-    labels = os.listdir(input)
-    bar = Bar('Processing Labels', max=len(labels))
-    for label in labels:
-        label_data = cv2.imread(os.path.join(input, label))
-        label_data = resize_label(label_data)
-        label_data = reclassify_label(label_data)
-        cv2.imwrite(os.path.join(output, label), label_data)
-        bar.next()
+    worker = Pool(MAX_CONCURRENCY)
+    worker.map(
+        process_image,
+        [(os.path.join(input, image), os.path.join(output, image)) for image in images]
+    )
     bar.finish()
 
 if __name__ == '__main__':
     transform_images('data/bdd100k/segmentation/images/train', 'data/bdd100k/segmentation/processed_images/train')
     transform_images('data/bdd100k/segmentation/images/val', 'data/bdd100k/segmentation/processed_images/val')
 
-    transform_labels(classes, 'data/bdd100k/segmentation/color_labels/train', 'data/bdd100k/segmentation/processed_labels/train')
-    transform_labels(classes, 'data/bdd100k/segmentation/color_labels/val', 'data/bdd100k/segmentation/processed_labels/val')
+    transform_labels('data/bdd100k/segmentation/color_labels/train', 'data/bdd100k/segmentation/processed_labels/train')
+    transform_labels('data/bdd100k/segmentation/color_labels/val', 'data/bdd100k/segmentation/processed_labels/val')
