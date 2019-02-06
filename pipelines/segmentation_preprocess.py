@@ -60,8 +60,8 @@ def class_is_stationary(color):
 def processed_label(args):
     label_data = cv2.imread(args[0])
     label_data = cv2.resize(label_data, (0, 0), fx=0.666, fy=0.666, interpolation=cv2.INTER_NEAREST)
-    label_data[:, 106:746] # crop 480x852 to 480x640
-    label_data = np.apply_along_axis(class_is_stationary, 2, label_datatobia)
+    label_data = label_data[:, 106:746] # crop 480x852 to 480x640
+    label_data = np.apply_along_axis(class_is_stationary, 2, label_data)
 
     np.save(args[1], label_data)
     bar.next()
@@ -97,8 +97,8 @@ def transform_images(input, output):
     bar.finish()
 
 if __name__ == '__main__':
-    transform_images('data/bdd100k/segmentation/images/train', 'data/bdd100k/segmentation/processed_images/train')
-    transform_images('data/bdd100k/segmentation/images/val', 'data/bdd100k/segmentation/processed_images/val')
+    #transform_images('data/bdd100k/segmentation/images/train', 'data/bdd100k/segmentation/processed_images/train')
+    #transform_images('data/bdd100k/segmentation/images/val', 'data/bdd100k/segmentation/processed_images/val')
 
     transform_labels('data/bdd100k/segmentation/color_labels/train', 'data/bdd100k/segmentation/processed_labels/train')
     transform_labels('data/bdd100k/segmentation/color_labels/val', 'data/bdd100k/segmentation/processed_labels/val')

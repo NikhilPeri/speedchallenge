@@ -31,7 +31,7 @@ class DataGenerator(keras.utils.Sequence):
             images.append(cv2.imread(os.path.join(self.image_path, image) + '.jpg'))
             labels.append(np.load(os.path.join(self.label_path, image) + '.npy'))
 
-        return images, labels
+        return np.array(images), np.array(labels)
 
     def on_epoch_end(self):
         if self.shuffle == True:

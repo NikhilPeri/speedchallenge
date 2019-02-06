@@ -13,17 +13,13 @@ import pickle
 from dask import array as da
 from progress.bar import Bar
 
-segmentation_model = load_model('results/local_upsampling_cnn.hdf5')
-def segment_frame(frame):
-    frame = segmentation_model.predict(np.array([frame]))[0]
+optical_flow_model = load_model('results/optical_flow_baseline.hdf5')
 
-    return segmentation_model.predict(np.array([frame]))[0]
-
-def compute_segments(input, output, chunksize=500):
+def compute_speeds(input, output, chunksize=500):
     video = cv2.VideoCapture(input)
     bar = Bar('Processed Frame', max=video.get(cv2.CAP_PROP_FRAME_COUNT))
-    chunks = []
-    chunk_data = []
+    speeds = np.array([])
+    frames = []
 
     while video.isOpened():
         valid, frame = video.read()
@@ -34,15 +30,12 @@ def compute_segments(input, output, chunksize=500):
         bar.next()
 
         if len(chunk_data) == chunksize:
-            chunk_data = segmentation_model.predict(np.array(chunk_data))
-            with open(os.path.join(output, '{}.npy'.format(len(chunks))), 'w+') as f:
-                np.save(f, chunk_data)
-                chunks.append(chunk_data.shape[0])
-                chunk_data = []
+            chunk_data = optical_flow_model.predict(np.array(chunk_data))
+            speeds = np.stack([speeds, chunk_data])
+            chunk_data = []
 
     # Save Partial Chunk
-    with open(os.path.join(output, '{}.npy'.format(len(chunks))), 'w+') as f:
-        chunk_data = segmentation_model.predict(np.array(chunk_data))
+    with open(output, 'w+') as f:
         np.save(f, chunk_data)
         chunks.append(len(chunk_data))
 
