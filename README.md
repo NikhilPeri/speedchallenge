@@ -41,11 +41,12 @@ helping it better generalize to the validation set. Finally prediction if perfor
 
 In order to demonstrate the effectiveness of the segmentation channel I trained an identical
 model using only optical flow and monitored its mean squared error on an identical train and validation set.
-As we can see from the validation loss, our segmentation hybrid model is able to better generalize to unseen data points.  
-**Ultimately through the use of transfer learning it achieves 6.05 MSE**, for
-scale [comma.ai](https://twitter.com/comma_ai/status/913196051292499968?lang=en) was able to achieve 4.05, but it is unclear if they used their
-full 7 million mile dataset to train their model.
+As we can see from the validation loss, our segmentation hybrid model is able to better generalize to unseen data points.
 
+**Ultimately through the use of transfer learning it achieves 6.05 MSE**, for
+scale [comma.ai](https://twitter.com/comma_ai/status/913196051292499968?lang=en) was able to achieve 4.05.
+
+![Model Comparison](figures/model_comparison.png)
 
 ## Block Based Splitter
 
