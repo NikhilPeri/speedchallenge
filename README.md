@@ -24,7 +24,7 @@ bridge) this helped reduce the size of my segmentation model.
 
 I then experimented with two segmentation models, a traditional model based on Transpose Convolutional Layers, and a more complex
 [uNet](https://github.com/zhixuhao/unet) which achieved good results on a biomedical imaging dataset. For this dataset I was able to achieve
-best results using the Transpose Convolutional model with 96.5% accuracy and binary cross entropy of 0.109 on a 480x640 image.
+best results using the *Transpose Convolutional model with 96.5% accuracy and binary cross entropy of 0.109 on a 480x640 image*.
 
 ![Comma.ai Training Sample](figures/comma_ai_training_segment.png)
 
@@ -47,9 +47,7 @@ We can now construct and input with both optical flow of x and y pixel motion an
 likelyhood our model will over fit to visual queue in the scene and generally makes it more robust even though the speed model is trained on
 a fairly small homogenous dataset.
 
-```
-todo fancy image of a sample model input
-```
+![Model Input]('figures/hybrid_model_input.png')
 
 This is fed into a simple __ layer CNN which uses Average Pooling for the first __ layers followed by Max Pooling.  While Average Pooling lacks
 sensitivity and is generally not used in classifiers, I found the lack of sensitivity in earlier layers was benifitial in this regression model
