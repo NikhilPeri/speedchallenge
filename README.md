@@ -26,7 +26,7 @@ I then experimented with two segmentation models, a traditional model based on T
 [uNet](https://github.com/zhixuhao/unet) which achieved good results on a biomedical imaging dataset. For this dataset I was able to achieve
 best results using the Transpose Convolutional model with 96.5% accuracy and binary cross entropy of 0.109 on a 480x640 image.
 
-![Comma.ai Training Sample](figures/comma_ai_trainining_segment.png)
+![Comma.ai Training Sample](figures/comma_ai_training_segment.png)
 
 The model had the following architecture
 ```
