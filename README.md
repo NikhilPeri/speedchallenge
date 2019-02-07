@@ -61,5 +61,5 @@ validation frame and and its nearest training frame.
 
 ![Block Based Splitting](figures/block_based_split.png)
 
-Using this method we can sample our video while maintaining a minimum interframe distance between the training/validation groups and  
+Using this method we can sample our video while maintaining a minimum interframe distance between the training/validation groups and
 not altering the distribution of labels across the groups and original video which could introduce unecesarry bias in the model.
