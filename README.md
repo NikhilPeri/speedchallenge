@@ -47,7 +47,7 @@ We can now construct and input with both optical flow of x and y pixel motion an
 likelyhood our model will over fit to visual queue in the scene and generally makes it more robust even though the speed model is trained on
 a fairly small homogenous dataset.
 
-![Model Input]('figures/hybrid_model_input.png')
+![Model Input](figures/hybrid_model_input.png)
 
 This is fed into a simple __ layer CNN which uses Average Pooling for the first __ layers followed by Max Pooling.  While Average Pooling lacks
 sensitivity and is generally not used in classifiers, I found the lack of sensitivity in earlier layers was benifitial in this regression model
