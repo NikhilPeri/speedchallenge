@@ -20,15 +20,14 @@ Semanitic Segmentation is basically pixel level classification of an images. I u
 image with a binary class representing if given region could move between frames (ex. car, bikes, people) of if it was fixed (ex. tree, road,
 bridge) this helped reduce the size of my segmentation model.
 
-```
-todo put the fancy juxtapose image here
-```
+![BDD 100k Training Sample](figures/bdd100k_training_sample.png)
+
 I then experimented with two segmentation models, a traditional model based on Transpose Convolutional Layers, and a more complex
 [uNet](https://github.com/zhixuhao/unet) which achieved good results on a biomedical imaging dataset. For this dataset I was able to achieve
 best results using the Transpose Convolutional model with 96.5% accuracy and binary cross entropy of 0.109 on a 480x640 image.
 
 ```
-todo put fancy juxtapose image here
+
 ```
 
 The model had the following architecture
