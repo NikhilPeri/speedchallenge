@@ -5,10 +5,11 @@ import keras
 import numpy as np
 
 MAX_CONCURRENCY=8
-BATCH_SIZE=10
+BATCH_SIZE=5
 EPOCHS=100
 
-from algorithms.unet import model
+from algorithms.upsampling_cnn import model
+#model = keras.model.load('models/upsampling.hdf5')
 
 class DataGenerator(keras.utils.Sequence):
     def __init__(self, image_path, label_path, batch_size=BATCH_SIZE, shuffle=True):
@@ -28,6 +29,16 @@ class DataGenerator(keras.utils.Sequence):
         images = []
         labels = []
         for image in indexes:
+            images.append(cv2.imread(os.path.join(self.image_path, image) + '.jpg'))
+            labels.append(np.load(os.path.join(self.label_path, image) + '.npy'))
+
+        return np.array(images), np.array(labels)
+
+
+    def all(self):
+        images = []
+        labels = []
+        for image in self.indexes:
             images.append(cv2.imread(os.path.join(self.image_path, image) + '.jpg'))
             labels.append(np.load(os.path.join(self.label_path, image) + '.npy'))
 
@@ -55,8 +66,9 @@ if __name__ == '__main__':
     )
     model.fit_generator(
         generator=DataGenerator('data/bdd100k/segmentation/processed_images/train', 'data/bdd100k/segmentation/processed_labels/train'),
-        validation_data=DataGenerator('data/bdd100k/segmentation/processed_images/val', 'data/bdd100k/segmentation/processed_labels/val'),
+        validation_data=DataGenerator('data/bdd100k/segmentation/processed_images/val', 'data/bdd100k/segmentation/processed_labels/val').all(),
         use_multiprocessing=True,
         workers=MAX_CONCURRENCY,
-        callbacks=[save_callback, tensorboard_callback]
+        callbacks=[save_callback, tensorboard_callback],
+        epochs=EPOCHS
     )

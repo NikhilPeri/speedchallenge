@@ -13,7 +13,7 @@ import pickle
 from dask import array as da
 from progress.bar import Bar
 
-segmentation_model = load_model('results/local_upsampling_cnn.hdf5')
+segmentation_model = load_model('results/upsampling_cnn.hdf5')
 def segment_frame(frame):
     frame = segmentation_model.predict(np.array([frame]))[0]
 

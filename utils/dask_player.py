@@ -19,30 +19,21 @@ def visualize_optical_flow(flow):
 def dask_player(video, segmentation, optical_flow):
     Cache(2e6).register()    # Turn cache on globally
     video = cv2.VideoCapture(video)
+    segmentation = da.from_npy_stack(segmentation)
     optical_flow = da.from_npy_stack(optical_flow)
 
     bar = Bar('Frame', max=video.get(cv2.CAP_PROP_FRAME_COUNT))
+    video.read()
     while video.isOpened():
         video_frame = video.read()[1]
-        segmentation_frame = cv2.imread(os.path.join(segmentation, '{}.png'.format(bar.index)))
         optical_flow_frame = optical_flow[bar.index].compute()
+        segmentation_frame = segmentation[bar.index].compute()
         cv2.imshow('video', video_frame)
         cv2.imshow('segmentation', segmentation_frame)
         cv2.imshow('optical_flow', visualize_optical_flow(optical_flow_frame))
 
-        #static_optical_flow = (1* (segmentation_frame[:,:, 0:2] > 250)) * optical_flow_frame
-        #cv2.imshow('static_optical_flow', visualize_optical_flow(static_optical_flow))
-        #dynamic_optical_flow = (1* (segmentation_frame[:,:, 0:2] < 250)) * optical_flow_frame
-        #cv2.imshow('dynamic_optical_flow', visualize_optical_flow(dynamic_optical_flow))
-        '''
-        training_frame = np.array([
-            optical_flow_frame[:,:,0],
-            np.expand_dims(segmentation_frame[:,:,0]/255., 2),
-            optical_flow_frame[:,:,1]
-        ]).reshape(480, 640, 3)
-        '''
         cv2.waitKey(27)
         bar.next()
 
 if __name__ == '__main__':
-    dask_player('data/comma_ai/train.mp4', 'data/comma_ai/train_segments', 'data/comma_ai/train_optical_flow')
+    dask_player('data/comma_ai/train.mp4', 'data/comma_ai/best_train_segments', 'data/comma_ai/train_optical_flow')
