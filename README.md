@@ -22,36 +22,31 @@ bridge) this helped reduce the size of my segmentation model.
 
 ![BDD 100k Training Sample](figures/bdd100k_training_sample.png)
 
-I then experimented with two segmentation models, a traditional model based on Transpose Convolutional Layers, and a more complex
-[uNet](https://github.com/zhixuhao/unet) which achieved good results on a biomedical imaging dataset. For this dataset I was able to achieve
-best results using the *Transpose Convolutional model with 96.5% accuracy and binary cross entropy of 0.109 on a 480x640 image*.
+I then experimented with two segmentation models, a traditional model based on Transpose Convolutional Layers which performs "learned
+upsampling" of the image, it is fairly straight forward and best explained by the [following lecture](https://youtu.be/nDPWywWRIRo?t=1346.
+Also a more complex [uNet](https://github.com/zhixuhao/unet) which achieved good results on a biomedical imaging dataset.
+For this dataset I was able to achieve best results using the **Transpose Convolutional model with 96.5% accuracy and binary cross entropy of 0.109 on a 480x640 image**.
 
 ![Comma.ai Training Sample](figures/comma_ai_training_segment.png)
 
-The model had the following architecture
-```
-todo make diagram of model
-```
-*Convolutional Layers* was used to downsample the image while increasing the number of channels to preserve information
-*Locally Connected* was extremely expensive to implement, it provided great improvement to accuracy since it was able
-to learn a filter unique to each region of the image.  Essentially this reduced the probability of detecting the infamous flying car, by
-specifying regions in the image where certain classes are expected.
-*Transpose Convolutional Layer* this performed "learned upsampling" of the image, it is fairly straight forward and best explained by the
-[following lecture](https://youtu.be/nDPWywWRIRo?t=1346).  Essentially we swap the order of our kernel multiplication and take a larger stride
-to scale up the image.
-*Sigmoid Convolution* is a used to combine all channels with the sigmoid activation function to output a probability for each pixel.
-*Bilinear Upsample* this also helps average out single pixel noise since each class must span multiple pixels, however this decreases resolution
-our our edges.
-
-We can now construct and input with both optical flow of x and y pixel motion and labeled objects in the scene. This helps reduce the
-likelyhood our model will over fit to visual queue in the scene and generally makes it more robust even though the speed model is trained on
+We can now construct and input with both labeled objects in the scene and optical flow of x and y pixel motion. This helps reduce the
+likelyhood our model will over fit to visual queue in the scene and generally makes it more robust even though the model is trained on
 a fairly small homogenous dataset.
 
 ![Model Input](figures/hybrid_model_input.png)
 
-This is fed into a simple __ layer CNN which uses Average Pooling for the first __ layers followed by Max Pooling.  While Average Pooling lacks
+This is fed into a simple 5 layer CNN which uses Average Pooling for the first 3 layers followed by Max Pooling.  While Average Pooling lacks
 sensitivity and is generally not used in classifiers, I found the lack of sensitivity in earlier layers was benifitial in this regression model
-helping it better generalize to the validation set. In order to demonstrate the effectiveness of the segmentation channel I trained an identical
-model using only optical flow and monitored its mean squared error on an identical validation set.
+helping it better generalize to the validation set. Finally prediction if performed with 4 dense layers and a RelU activation.
+
+In order to demonstrate the effectiveness of the segmentation channel I trained an identical
+model using only optical flow and monitored its mean squared error on an identical train and validation set.
+As we can see from the validation loss, our segmentation hybrid model is able to better generalize to unseen data points.  
+**Ultimately through the use of transfer learning it achieves 6.05 MSE**, for
+scale [comma.ai](https://twitter.com/comma_ai/status/913196051292499968?lang=en) was able to achieve 4.05, but it is unclear if they used their
+full 7 million mile dataset to train their model.
+
 
 ## Block Based Splitter
+
+4068 samples, validate on 2034 samples

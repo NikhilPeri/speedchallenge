@@ -6,6 +6,10 @@ import dask.array as da
 from dask.cache import Cache
 from progress.bar import Bar
 
+OFFSET = 5220;
+
+#12250 Motorcycle Guy
+
 def visualize_optical_flow(flow):
     mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
     hsv = np.zeros((flow.shape[0], flow.shape[1], 3))
@@ -23,7 +27,8 @@ def dask_player(video, segmentation, optical_flow):
     optical_flow = da.from_npy_stack(optical_flow)
 
     bar = Bar('Frame', max=video.get(cv2.CAP_PROP_FRAME_COUNT))
-    video.read()
+    bar.index = OFFSET
+    video.set(cv2.CAP_PROP_POS_FRAMES, OFFSET)
     while video.isOpened():
         video_frame = video.read()[1]
         optical_flow_frame = optical_flow[bar.index].compute()
@@ -31,7 +36,7 @@ def dask_player(video, segmentation, optical_flow):
         cv2.imshow('video', video_frame)
         cv2.imshow('segmentation', segmentation_frame)
         cv2.imshow('optical_flow', visualize_optical_flow(optical_flow_frame))
-
+        import pdb; pdb.set_trace()
         cv2.waitKey(27)
         bar.next()
 
