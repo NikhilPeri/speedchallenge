@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 import importlib
 from algorithms.hybrid_model import model
-BATCH_SIZE=10
+BATCH_SIZE=20
 EPOCHS=50
 
 speed = np.loadtxt('data/comma_ai/train.txt', delimiter='\n')
@@ -61,6 +61,7 @@ class DataGenerator(keras.utils.Sequence):
     def all(self):
         labels = self.labels.sort_values('frame')
         with dask.config.set(pool=ThreadPool(8)):
+            print 'load dask array...'
             optical_flow = da.take(self.optical_flow, labels['frame'].values, axis=0).compute()
             segments = da.take(self.segments, labels['frame'].values, axis=0).compute()
         frames = np.concatenate([optical_flow, np.expand_dims(segments, 4)], axis=3)
@@ -69,8 +70,7 @@ class DataGenerator(keras.utils.Sequence):
     def on_epoch_end(self):
         if self.shuffle == True:
             self.labels = self.labels.sample(frac=1.0).reset_index(drop=True)
-
-if __name__ == '__main__':
+def setup_callbacks():
     timestamp = time.strftime('%c')
     os.mkdir('models/{}'.format(timestamp))
     os.mkdir('logs/{}'.format(timestamp))
@@ -86,19 +86,25 @@ if __name__ == '__main__':
         batch_size=BATCH_SIZE,
         update_freq='epoch'
     )
+    return [save_callback, tensorboard_callback]
 
-    training_set, validation_set = block_based_split(speed, 0.2, 0.1, 120, 60)
+if __name__ == '__main__':
+    training_set, validation_set = block_based_split(speed, 0.3, 0.1, 120, 60)
     training_data = DataGenerator(training_set, 'data/comma_ai/train_optical_flow', 'data/comma_ai/train_segments').all()
     validation_data = DataGenerator(validation_set, 'data/comma_ai/train_optical_flow', 'data/comma_ai/train_segments').all()
+
+    callbacks = setup_callbacks()
     while True:
         try:
             model.fit(
                 *training_data,
                 validation_data=validation_data,
                 batch_size=BATCH_SIZE, epochs=EPOCHS,
-                callbacks=[save_callback, tensorboard_callback]
+                callbacks=callbacks,
+                shuffle=True
             )
         except KeyboardInterrupt:
             keras.backend.clear_session()
             import pdb; pdb.set_trace()
             model = reload(importlib.import_module('algorithms.hybrid_model')).model
+            callbacks = setup_callbacks()
